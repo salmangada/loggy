@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property scope="context" name="log.fileExtension" value="log"/>
+    <property scope="context" name="log.fileName" value="loggy"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>origin</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>transactionId</includeMdcKeyName>
+            <includeMdcKeyName>timeZone</includeMdcKeyName>
+            <includeMdcKeyName>uri</includeMdcKeyName>
+            <includeMdcKeyName>threadId</includeMdcKeyName>
+        </encoder>
+
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%-5p [%d{ISO8601,UTC}] [%thread] %c: %m%n%rootException</pattern>
+            </layout>
+        </encoder>
+
+        <!--        <layout class="ch.qos.logback.classic.PatternLayout">-->
+        <!--            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS, Asia/Kolkata}] [${HOSTNAME}] [%thread] %level%logger{36}@%method:%line-->
+        <!--                - %msg%n-->
+        <!--            </pattern>-->
+        <!--        </layout>-->
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.fileName}.%d{yyyy-MM-dd}.${log.fileExtension}</fileNamePattern>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS, Asia/Kolkata}] [${HOSTNAME}] [%thread] %level%logger{36}@%method:%line
+                - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!--    <appender name="STASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
+    <!--        <destination>logstash:5044</destination>-->
+    <!--        &lt;!&ndash; encoder is required &ndash;&gt;-->
+    <!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
+    <!--            <timeZone>Asia/Kolkata</timeZone>-->
+    <!--            <timestampPattern>yyyy-MM-dd HH:mm:ss.SSS, Asia/Kolkata</timestampPattern>-->
+    <!--        </encoder>-->
+    <!--        <keepAliveDuration>5 minutes</keepAliveDuration>-->
+    <!--    </appender>-->
+
+    <!-- Logger for Hibernate -->
+    <logger name="org.hibernate" level="ERROR">
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <root level="ERROR">
+        <appender-ref ref="STDOUT"/>
+        <!--        <appender-ref ref="STASH"/>-->
+        <appender-ref ref="FILE"/>
+    </root>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+        <!--        <appender-ref ref="STASH"/>-->
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>

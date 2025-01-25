@@ -1,0 +1,25 @@
+filebeat.inputs:
+  - type: container
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    processors:
+      - add_docker_metadata: ~
+    #      - add_host_metadata: ~
+    multiline:
+      pattern: '^[A-Z]+\s'
+      negate: true
+      match: after
+
+
+output.elasticsearch:
+  hosts: [ "elasticsearch:9200" ]
+
+setup.template.enabled: true
+setup.template.name: "filebeat"
+setup.template.pattern: "filebeat-*"
+
+logging.level: info
+logging.to_files: false
+logging.to_stdout: true
+
+ssl.verification_mode: none

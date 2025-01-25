@@ -1,0 +1,83 @@
+version: '3.8'
+services:
+
+  filebeat:
+    build:
+      context: ./filebeat
+      dockerfile: Dockerfile
+    user: root
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.2
+    user: root
+    volumes:
+      - ./elk/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.15.2
+    user: root
+    volumes:
+      - ./elk/kibana/:/usr/share/kibana/config/
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    entrypoint: [ "./bin/kibana", "--allow-root" ]
+    networks:
+      - elk
+
+  app:
+    image: 'springbootelk:latest'
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: SpringBootElk
+    depends_on:
+      - db
+      - kibana
+      - elasticsearch
+    ports:
+      - '8077:8077'
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/elk?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD}
+    networks:
+      - elk
+
+  db:
+    container_name: db
+    image: 'mysql:latest'
+    ports:
+      - "3366:3306"
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - elk
+
+# Volumes
+volumes:
+  db-data:
+
+networks:
+  elk:
